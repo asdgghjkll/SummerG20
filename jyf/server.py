@@ -4,8 +4,10 @@ import os
 import json
 import psutil
 import chardet
-
 from urllib.parse import urlparse, parse_qs, unquote
+from http.server import SimpleHTTPRequestHandler
+from urllib.parse import unquote_plus
+from http import HTTPStatus
 
 # Define server port
 PORT = 8090
@@ -60,7 +62,7 @@ def get_drives():
         drives.append(drive.device)
     return drives
 
-class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
+class MyRequestHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         global saved_files
         parsed_url = urlparse(self.path)
@@ -68,34 +70,46 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
         query_params = parse_qs(parsed_url.query)
         if path == '/drives':
             drives = get_drives()
-            self.send_response(200)
+            self.send_response(HTTPStatus.OK)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.end_headers()
             self.wfile.write(json.dumps(drives).encode('utf-8'))
         elif path == '/folders':
             drive_path = unquote(query_params['path'][0])
             folders = get_folders_recursive(drive_path)
-            self.send_response(200)
+            self.send_response(HTTPStatus.OK)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.end_headers()
             self.wfile.write(json.dumps(folders).encode('utf-8'))
         elif path == '/save':
             folder_path = unquote(query_params['path'][0])
             saved_files = save_files_recursive(folder_path)
-            self.send_response(200)
+            self.send_response(HTTPStatus.OK)
             self.send_header('Content-type', 'text/plain; charset=utf-8')
             self.end_headers()
             self.wfile.write('Files saved successfully.'.encode('utf-8'))
         elif path == '/search':
             keyword = unquote(query_params['keyword'][0])
             search_result = search_files(keyword)
-            self.send_response(200)
+            self.send_response(HTTPStatus.OK)
             self.send_header('Content-type', 'application/json; charset=utf-8')
             self.end_headers()
             self.wfile.write(json.dumps(search_result, ensure_ascii=False).encode('utf-8'))
         else:
             super().do_GET()
 
+    def end_headers(self):
+        self.send_my_headers()
+        super().end_headers()
+
+    def send_my_headers(self):
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, OPTIONS')
+
+    def do_OPTIONS(self):
+        self.send_response(HTTPStatus.NO_CONTENT)
+        self.send_my_headers()
+        self.end_headers()
 
 # Create an HTTP server
 with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
