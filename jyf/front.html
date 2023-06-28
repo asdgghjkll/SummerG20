@@ -1,196 +1,236 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件检索系统</title>
-    <style>
-        /* Styles definition */
-        .container {
-          text-align: center;
-        }
-        .drive-button, .folder-button {
-          margin: 5px;
-        }
-        .search-result {
-          margin-top: 20px;
-          white-space: pre-line;
-        }
-        .search-result .path {
-          font-weight: bold;
-        }
-        .search-result .line {
-          color: red;
-        }
-        .selected {
-          background-color: yellow;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>文件检索系统</title>
+  <style>
+    /* Styles definition */
+    .container {
+      text-align: center;
+    }
+
+    .drive-button,
+    .folder-button {
+      margin: 5px;
+    }
+
+    .search-result {
+      margin-top: 20px;
+      white-space: pre-line;
+    }
+
+    .search-result .path {
+      font-weight: bold;
+    }
+
+    .search-result .line {
+      color: red;
+    }
+
+    .selected {
+      background-color: yellow;
+    }
+
+    #export {
+        display: block;
+        margin: 0 auto;
+      }
+      
+    .highlight {
+      background-color: red;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <button id="select">Select</button>
-        <div id="drives"></div>
-        <div id="folders"></div>
-        <button id="save">Save</button>
-        <div id="save-message"></div>
-        <input type="text" id="search-input">
-        <button id="search">Search</button>
-        <div id="search-result"></div>
-    </div>
+  <div class="container">
+    <button id="select">Select</button>
+    <div id="drives"></div>
+    <div id="folders"></div>
+    <button id="save">Save</button>
+    <div id="save-message"></div>
+    <input type="text" id="search-input">
+    <button id="search">Search</button>
+    <div id="search-result"></div>
+    <button id="export" style="display: none;">Export</button>
+  </div>
 
-    <script>
-        // JavaScript code
-        // Global variable to store the selected folder path
-        var selectedFolderPath = '';
+  <script>
+    // JavaScript code
+    // Global variable to store the selected folder path
+    var selectedFolderPath = '';
 
-        // Click Select button to get the names of all drives and display them
-        document.getElementById('select').addEventListener('click', function() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', '/drives');
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var drives = JSON.parse(xhr.responseText);
-                    var drivesContainer = document.getElementById('drives');
-                    drivesContainer.innerHTML = ''; // Clear previous content
+    // Click Select button to get the names of all drives and display them
+    document.getElementById('select').addEventListener('click', function () {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/drives');
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var drives = JSON.parse(xhr.responseText);
+          var drivesContainer = document.getElementById('drives');
+          drivesContainer.innerHTML = ''; // Clear previous content
 
-                    // Create and add drive buttons
-                    for (var i = 0; i < drives.length; i++) {
-                        var driveButton = document.createElement('button');
-                        driveButton.classList.add('drive-button');
-                        driveButton.innerText = drives[i];
-                        driveButton.addEventListener('click', function(event) {
-                            var driveName = event.target.innerText;
-                            showFolders(driveName);
-                        });
-                        drivesContainer.appendChild(driveButton);
-                    }
-                }
-            };
-            xhr.send();
-        });
-
-        // Show folders in a drive
-        // Show folders in a directory
-        function showFolders(folderPath) {
-            var xhr = new XMLHttpRequest();
-            var url = '/folders?path=' + encodeURIComponent(folderPath);
-            xhr.open('GET', url);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var folders = JSON.parse(xhr.responseText);
-                    var foldersContainer = document.getElementById('folders');
-                    foldersContainer.innerHTML = ''; // Clear previous content
-
-                    // Create and add folder buttons
-                    for (var i = 0; i < folders.length; i++) {
-                        var folderButton = document.createElement('button');
-                        folderButton.classList.add('folder-button');
-                        folderButton.innerText = folders[i];
-                        folderButton.addEventListener('click', function(event) {
-                            var newFolderPath = folderPath + '\\' + event.target.innerText;
-                            selectFolder(newFolderPath);
-                        });
-                        foldersContainer.appendChild(folderButton);
-                    }
-                    
-                    // Add a button to go back to the parent directory
-                    if (folderPath !== '') {
-                        var backButton = document.createElement('button');
-                        backButton.classList.add('folder-button');
-                        backButton.innerText = '..';
-                        backButton.addEventListener('click', function() {
-                            var parentPath = folderPath.substring(0, folderPath.lastIndexOf('\\'));
-                            showFolders(parentPath);
-                        });
-                        foldersContainer.appendChild(backButton);
-                    }
-
-                    // Add event listeners to folder buttons for double-click
-                    var folderButtons = foldersContainer.getElementsByClassName('folder-button');
-                    for (var j = 0; j < folderButtons.length; j++) {
-                        folderButtons[j].addEventListener('dblclick', function(event) {
-                            var newFolderPath = folderPath + '\\' + event.target.innerText;
-                            showFolders(newFolderPath);
-                        });
-                    }
-                }
-            };
-            xhr.send();
+          // Create and add drive buttons
+          for (var i = 0; i < drives.length; i++) {
+            var driveButton = document.createElement('button');
+            driveButton.classList.add('drive-button');
+            driveButton.innerText = drives[i];
+            driveButton.addEventListener('click', function (event) {
+              var driveName = event.target.innerText;
+              showFolders(driveName);
+            });
+            drivesContainer.appendChild(driveButton);
+          }
         }
+      };
+      xhr.send();
+    });
+
+    // Show folders in a drive
+    // Show folders in a directory
+    function showFolders(folderPath) {
+      var xhr = new XMLHttpRequest();
+      var url = '/folders?path=' + encodeURIComponent(folderPath);
+      xhr.open('GET', url);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var folders = JSON.parse(xhr.responseText);
+          var foldersContainer = document.getElementById('folders');
+          foldersContainer.innerHTML = ''; // Clear previous content
+
+          // Create and add folder buttons
+          for (var i = 0; i < folders.length; i++) {
+            var folderButton = document.createElement('button');
+            folderButton.classList.add('folder-button');
+            folderButton.innerText = folders[i];
+            folderButton.addEventListener('click', function (event) {
+              var newFolderPath = folderPath + '\\' + event.target.innerText;
+              selectFolder(newFolderPath);
+            });
+            foldersContainer.appendChild(folderButton);
+          }
+
+          // Add a button to go back to the parent directory
+          if (folderPath !== '') {
+            var backButton = document.createElement('button');
+            backButton.classList.add('folder-button');
+            backButton.innerText = '..';
+            backButton.addEventListener('click', function () {
+              var parentPath = folderPath.substring(0, folderPath.lastIndexOf('\\'));
+              showFolders(parentPath);
+            });
+            foldersContainer.appendChild(backButton);
+          }
+
+          // Add event listeners to folder buttons for double-click
+          var folderButtons = foldersContainer.getElementsByClassName('folder-button');
+          for (var j = 0; j < folderButtons.length; j++) {
+            folderButtons[j].addEventListener('dblclick', function (event) {
+              var newFolderPath = folderPath + '\\' + event.target.innerText;
+              showFolders(newFolderPath);
+            });
+          }
+        }
+      };
+      xhr.send();
+    }
 
 
-        // Select a folder
-        function selectFolder(folderPath) {
-            var buttons = document.getElementsByClassName('folder-button');
-            for (var i = 0; i < buttons.length; i++) {
-                buttons[i].classList.remove('selected');
+    // Select a folder
+    function selectFolder(folderPath) {
+      var buttons = document.getElementsByClassName('folder-button');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('selected');
+      }
+      selectedFolderPath = folderPath;
+      var selectedButton = event.target;
+      selectedButton.classList.add('selected');
+    }
+
+    // Save the selected folder's files
+    document.getElementById('save').addEventListener('click', function () {
+      var xhr = new XMLHttpRequest();
+      var url = '/save?path=' + encodeURIComponent(selectedFolderPath);
+      xhr.open('GET', url);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var saveMessage = document.getElementById('save-message');
+          saveMessage.innerText = 'Files saved successfully.';
+        }
+      };
+      xhr.send();
+    });
+
+    // Search for keyword in saved files
+    document.getElementById('search').addEventListener('click', function () {
+      var keyword = document.getElementById('search-input').value;
+      var xhr = new XMLHttpRequest();
+      var url = '/search?keyword=' + encodeURIComponent(keyword);
+      xhr.open('GET', url);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          var searchResult = JSON.parse(xhr.responseText);
+          var searchResultContainer = document.getElementById('search-result');
+          searchResultContainer.innerHTML = ''; // Clear previous content
+
+          // Iterate over search results and create the display format
+          for (var filePath in searchResult) {
+            if (searchResult.hasOwnProperty(filePath)) {
+              var results = searchResult[filePath];
+
+              // Create path element
+              var pathElement = document.createElement('div');
+              pathElement.classList.add('path');
+              pathElement.innerText = filePath;
+              searchResultContainer.appendChild(pathElement);
+
+              // Create separator element
+              var separatorElement = document.createElement('hr');
+              searchResultContainer.appendChild(separatorElement);
+
+              // Iterate over results and create line elements
+              for (var i = 0; i < results.length; i++) {
+                var result = results[i];
+                var lineElement = document.createElement('div');
+                lineElement.classList.add('line');
+                var content = result.content.replace(new RegExp(keyword, 'gi'), function (match) {
+                  return '<span class="highlight">' + match + '</span>';
+                });
+                lineElement.innerHTML = 'Line ' + result.line + ': ' + content;
+                searchResultContainer.appendChild(lineElement);
+              }
+
+              // Create separator element
+              separatorElement = document.createElement('hr');
+              searchResultContainer.appendChild(separatorElement);
             }
-            selectedFolderPath = folderPath;
-            var selectedButton = event.target;
-            selectedButton.classList.add('selected');
+          }
+
+          // Show the export button
+          var exportButton = document.getElementById('export');
+          exportButton.style.display = 'block';
         }
+      };
+      xhr.send();
+    });
 
-        // Save the selected folder's files
-        document.getElementById('save').addEventListener('click', function() {
-            var xhr = new XMLHttpRequest();
-            var url = '/save?path=' + encodeURIComponent(selectedFolderPath);
-            xhr.open('GET', url);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var saveMessage = document.getElementById('save-message');
-                    saveMessage.innerText = 'Files saved successfully.';
-                }
-            };
-            xhr.send();
-        });
+    // Export search result as text file
+    document.getElementById('export').addEventListener('click', function () {
+      var searchResultContainer = document.getElementById('search-result');
+      var searchResult = searchResultContainer.innerText;
 
-        // Search for keyword in saved files
-        document.getElementById('search').addEventListener('click', function() {
-            var keyword = document.getElementById('search-input').value;
-            var xhr = new XMLHttpRequest();
-            //var url = '/search?keyword=' + encodeURIComponent(keyword);
-            var url = '/search?keyword=' + keyword;
-            xhr.open('GET', url);
-            xhr.onreadystatechange = function() {
-                if (xhr.readyState === 4 && xhr.status === 200) {
-                    var searchResult = JSON.parse(xhr.responseText);
-                    var searchResultContainer = document.getElementById('search-result');
-                    searchResultContainer.innerHTML = ''; // Clear previous content
-        
-                    // Iterate over search results and create the display format
-                    for (var filePath in searchResult) {
-                        if (searchResult.hasOwnProperty(filePath)) {
-                            var results = searchResult[filePath];
-        
-                            // Create path element
-                            var pathElement = document.createElement('div');
-                            pathElement.classList.add('path');
-                            pathElement.innerText = filePath;
-                            searchResultContainer.appendChild(pathElement);
-        
-                            // Create separator element
-                            var separatorElement = document.createElement('hr');
-                            searchResultContainer.appendChild(separatorElement);
-        
-                            // Iterate over results and create line elements
-                            for (var i = 0; i < results.length; i++) {
-                                var result = results[i];
-                                var lineElement = document.createElement('div');
-                                lineElement.classList.add('line');
-                                lineElement.innerHTML = 'Line ' + result.line + ': ' + result.content;
-                                searchResultContainer.appendChild(lineElement);
-                            }
-        
-                            // Create separator element
-                            separatorElement = document.createElement('hr');
-                            searchResultContainer.appendChild(separatorElement);
-                        }
-                    }
-                }
-            };
-            xhr.send();
-        });
-    </script>
+      // Create a temporary link element to download the file
+      var link = document.createElement('a');
+      link.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(searchResult);
+      link.download = 'search_result.txt';
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  </script>
 </body>
+
 </html>
