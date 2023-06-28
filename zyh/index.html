@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>文件检索系统</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        // 发送查询请求并处理结果
+        function search() {
+            var keyword = document.getElementById("keyword").value;
+
+            $.ajax({
+                url: "search.php", // 后端处理查询的API
+                method: "GET",
+                data: { keyword: keyword },
+                success: function(response) {
+                    // 处理查询结果并显示
+                    var results = JSON.parse(response);
+                    // 进行结果的显示和操作
+                },
+                error: function(xhr, status, error) {
+                    console.log("查询失败: " + error);
+                }
+            });
+        }
+
+        // 处理用户选择查询结果并保存
+        function saveSelectedResults() {
+            // 获取用户选择的结果，发送给后端并下载保存
+        }
+    </script>
+</head>
+<body>
+    <h1>文件检索系统</h1>
+    <input type="text" id="keyword" placeholder="输入关键字">
+    <button onclick="search()">查询</button>
+
+    <!-- 显示查询结果的区域 -->
+    <div id="results"></div>
+
+    <!-- 操作选中结果并保存 -->
+    <button onclick="saveSelectedResults()">保存选中结果</button>
+</body>
+</html>
