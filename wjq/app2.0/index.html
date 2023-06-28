@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>APP文件检索系统</title>
+  </head>
+  <body>
+    <h1>APP文件检索系统</h1>
+    <form id="search-form">
+      <label for="query">查询关键字:</label>
+      <input type="text" id="query" name="query">
+      <br>
+      <label for="directory_path">目录路径:</label>
+      <input type="text" id="directory_path" name="directory_path">
+      <br>
+      <input type="submit" value="检索">
+    </form>
+    <hr>
+    <h2>检索结果</h2>
+    <div id="results"></div>
+    <hr>
+    <button id="save-button">保存</button>
+    <a id="download-link" href="#" download></a>
+  </body>
+</html>
